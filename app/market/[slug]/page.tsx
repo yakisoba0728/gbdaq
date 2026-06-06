@@ -46,7 +46,7 @@ export default function MarketPage() {
             </div>
           )}
         </div>
-        <div className="lg:sticky lg:top-4 max-lg:order-first">
+        <div className="lg:sticky lg:top-[68px] max-lg:order-first">
           <TradePanel m={m} />
           <PositionBox m={m} />
         </div>

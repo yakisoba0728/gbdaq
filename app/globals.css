@@ -83,6 +83,10 @@
   /* tabular numerals for prices/figures (Apple-precise number alignment) */
   .nums { font-variant-numeric: tabular-nums; }
 
+  /* hide scrollbar but keep horizontal scroll (category tabs) */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
   /* auto-scrolling ticker marquee (no scrollbar; pause on hover) */
   .animate-ticker { animation: gbdaq-ticker 48s linear infinite; }
   .animate-ticker:hover { animation-play-state: paused; }

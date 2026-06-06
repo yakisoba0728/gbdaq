@@ -48,14 +48,14 @@ export function TradePanel({ m }: { m: DemoMarket }) {
 
       {mode === 'buy' ? (
         <>
-          <label className="ty-caption text-muted">금액 (상점)</label>
-          <input type="number" min={1} value={amount} onChange={e => setAmount(Number(e.target.value))} className="mb-3 mt-1.5 w-full rounded-[11px] border border-hairline bg-pearl px-4 py-3 ty-display-md nums text-ink focus-visible:outline-2 focus-visible:outline-bluefocus" />
+          <label htmlFor="trade-amount" className="ty-caption text-muted">금액 (상점)</label>
+          <input id="trade-amount" type="number" min={1} step={1} value={amount} onChange={e => setAmount(Math.max(1, Math.floor(Number(e.target.value) || 1)))} className="mb-3 mt-1.5 w-full rounded-[11px] border border-hairline bg-pearl px-4 py-3 ty-display-md nums text-ink focus-visible:outline-2 focus-visible:outline-bluefocus" />
           <div className="mb-4 flex gap-2">{[1, 5, 10].map(v => <button key={v} onClick={() => setAmount(a => a + v)} className="flex-1 rounded-full bg-pearl py-2 ty-caption nums text-muted transition active:scale-95">+{v}</button>)}</div>
         </>
       ) : (
         <>
-          <label className="flex justify-between ty-caption text-muted">지분 수<span className="nums">보유 {Math.round(held)}주</span></label>
-          <input type="number" min={1} max={Math.floor(held)} value={shares} onChange={e => setShares(Number(e.target.value))} disabled={held < 1} className="mb-3 mt-1.5 w-full rounded-[11px] border border-hairline bg-pearl px-4 py-3 ty-display-md nums text-ink focus-visible:outline-2 focus-visible:outline-bluefocus" />
+          <label htmlFor="trade-shares" className="flex justify-between ty-caption text-muted">지분 수<span className="nums">보유 {Math.round(held)}주</span></label>
+          <input id="trade-shares" type="number" min={1} step={1} max={Math.floor(held)} value={shares} onChange={e => setShares(Math.max(1, Math.min(Math.floor(held) || 1, Math.floor(Number(e.target.value) || 1))))} disabled={held < 1} className="mb-3 mt-1.5 w-full rounded-[11px] border border-hairline bg-pearl px-4 py-3 ty-display-md nums text-ink focus-visible:outline-2 focus-visible:outline-bluefocus" />
           <div className="mb-4 flex gap-2"><button onClick={() => setShares(Math.floor(held))} disabled={held < 1} className="flex-1 rounded-full bg-pearl py-2 ty-caption nums text-muted transition active:scale-95">전량 ({Math.round(held)}주)</button></div>
         </>
       )}
