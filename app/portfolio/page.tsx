@@ -29,7 +29,7 @@ export default function Portfolio() {
 
       <h2 className="mb-4 ty-body-strong text-ink">보유 포지션</h2>
       <div className="mb-12 rounded-[18px] border border-hairline bg-canvas">
-        {held.length === 0 && <p className="px-6 py-10 text-center ty-caption text-muted">아직 보유한 포지션이 없어요. <Link href="/" className="text-blue">마켓 둘러보기 →</Link></p>}
+        {held.length === 0 && <p className="px-6 py-10 text-center ty-caption text-muted">아직 한 주도 없네요. 구경만 하실 거예요? 👀 <Link href="/" className="text-blue">마켓 둘러보기 →</Link></p>}
         {held.map(m => {
           const p = positions[m.id]
           const py = priceOf(m)

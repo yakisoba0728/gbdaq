@@ -23,14 +23,14 @@ export function HeroMarket({ m }: { m: DemoMarket }) {
         <h1 className="ty-display text-ink">{m.question}</h1>
         {m.rules && <p className="ty-lead mt-3 text-muted">{m.rules}</p>}
 
-        <div className="mt-7 flex items-baseline gap-6">
-          <div>
-            <div className="ty-caption text-muted">예</div>
-            <AnimatedPercent value={shown} className="ty-hero text-up" />
+        <div className="mt-7 grid max-w-md grid-cols-2 gap-3">
+          <div className="rounded-[14px] border border-up/25 bg-upbg px-4 py-3">
+            <div className="ty-caption-strong text-up">예</div>
+            <AnimatedPercent value={shown} className="ty-display leading-none text-up" />
           </div>
-          <div>
-            <div className="ty-caption text-muted">아니오</div>
-            <AnimatedPercent value={1 - shown} className="ty-display-md text-down" />
+          <div className="rounded-[14px] border border-down/25 bg-downbg px-4 py-3">
+            <div className="ty-caption-strong text-down">아니오</div>
+            <AnimatedPercent value={1 - shown} className="ty-display leading-none text-down" />
           </div>
         </div>
 

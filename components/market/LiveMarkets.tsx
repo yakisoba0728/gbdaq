@@ -26,7 +26,7 @@ export function LiveMarkets({ markets, hero }: { markets: DemoMarket[]; hero?: D
             <p className="ty-body rounded-[18px] border border-hairline bg-canvas px-6 py-12 text-center text-muted">표시할 마켓이 없어요</p>
           ) : (
             <div className="grid grid-cols-[1fr_320px] gap-6 max-lg:grid-cols-1">
-              <div className="grid grid-cols-3 gap-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 xl:gap-6">
                 {markets.map(m => <MarketCard key={m.id} m={m} />)}
               </div>
               <RightRail markets={markets} />

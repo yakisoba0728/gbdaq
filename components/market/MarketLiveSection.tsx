@@ -27,7 +27,7 @@ export function MarketLiveSection({ m }: { m: DemoMarket }) {
       </div>
       <div className="rounded-[18px] border border-hairline bg-canvas p-6">
         <h3 className="mb-3 ty-body-strong text-ink">최근 거래 <span className="ty-caption text-faint">· 실시간</span></h3>
-        {activity.length === 0 && <p className="ty-caption text-muted">아직 거래가 없어요.</p>}
+        {activity.length === 0 && <p className="ty-caption text-muted">아직 아무도 안 질렀어요. 선구자 등장 대기 중 👀</p>}
         {activity.map(t => (
           <div key={t.id} className="flex items-center justify-between border-b border-divider py-2 last:border-0">
             <span className={`ty-caption-strong ${t.type === 'trade_buy' ? 'text-up' : 'text-down'}`}>{t.type === 'trade_buy' ? '매수' : '매도'}</span>

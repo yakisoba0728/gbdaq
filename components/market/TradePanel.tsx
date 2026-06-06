@@ -29,10 +29,10 @@ export function TradePanel({ m }: { m: DemoMarket }) {
     setMsg('')
     const res = mode === 'buy' ? buy(m.slug, side, amount) : sell(m.slug, side, shares)
     if (res.error) {
-      const friendly = res.error === 'insufficient balance' ? '상점이 부족해요' : res.error === 'insufficient shares' ? '보유 지분이 부족해요' : res.error
+      const friendly = res.error === 'insufficient balance' ? '상점이 부족해요 😭' : res.error === 'insufficient shares' ? '그만큼은 안 갖고 있어요' : res.error
       setMsg(friendly); toast(friendly, 'err'); return
     }
-    setMsg(mode === 'buy' ? '체결 완료!' : '매도 완료!'); toast(mode === 'buy' ? '매수 체결!' : '매도 완료!', 'ok')
+    setMsg(mode === 'buy' ? '탑승 완료 🚀' : '매도 완료 💸'); toast(mode === 'buy' ? '탑승 완료 🚀' : '매도 완료 💸', 'ok')
   }
 
   return (
