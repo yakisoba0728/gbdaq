@@ -8,27 +8,28 @@ export function Nav() {
   const { balance, reset } = useDemo()
   return (
     <header className="sticky top-0 z-50 border-b border-hairline bg-canvas/80 backdrop-blur">
-      <div className="mx-auto flex h-[52px] max-w-[1120px] items-center gap-5 px-6">
-        <Link href="/" className="flex items-center gap-1.5">
+      <div className="mx-auto flex h-[52px] max-w-[1120px] items-center gap-3 px-4 sm:gap-5 sm:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-1.5">
           <span className="ty-tagline text-ink">GBDAQ</span>
           <span className="h-1.5 w-1.5 rounded-full bg-blue" aria-hidden />
         </Link>
-        <div className="ml-auto flex items-center gap-4">
-          <Link href="/leaderboard" className="ty-caption text-muted transition hover:text-ink">랭킹</Link>
-          <Link href="/portfolio" className="ty-caption text-muted transition hover:text-ink">내 지갑</Link>
-          <span className="ty-caption-strong nums rounded-[11px] border border-divider bg-pearl px-3 py-1.5 text-ink">
-            💰 {fmtPoints(balance)} 상점
+        <nav className="ml-auto flex items-center gap-2 sm:gap-4">
+          <Link href="/leaderboard" className="ty-caption shrink-0 whitespace-nowrap text-muted transition hover:text-ink">랭킹</Link>
+          <Link href="/portfolio" className="ty-caption shrink-0 whitespace-nowrap text-muted transition hover:text-ink">내 지갑</Link>
+          <span className="ty-caption-strong nums shrink-0 whitespace-nowrap rounded-full border border-blue/30 bg-blue/5 px-2.5 py-1.5 text-ink sm:px-3">
+            💰 {fmtPoints(balance)}<span className="hidden sm:inline"> 상점</span>
           </span>
           <button
             type="button"
             onClick={reset}
-            title="데모 초기화"
-            className="ty-caption text-faint transition hover:text-ink"
+            title="처음부터 (흑역사 리셋)"
+            aria-label="데모 리셋"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[15px] text-faint transition hover:bg-pearl hover:text-ink"
           >
-            리셋
+            ↺
           </button>
           <ThemeToggle />
-        </div>
+        </nav>
       </div>
     </header>
   )

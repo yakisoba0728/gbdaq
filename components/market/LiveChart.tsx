@@ -23,16 +23,17 @@ export function LiveChart({ points, height = 240 }: { points: number[]; height?:
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none">
         <defs>
           <linearGradient id={`lc-${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor={stroke} stopOpacity=".18" />
-            <stop offset="1" stopColor={stroke} stopOpacity="0" />
+            <stop offset="0" stopColor={stroke} stopOpacity=".28" />
+            <stop offset="1" stopColor={stroke} stopOpacity=".02" />
           </linearGradient>
         </defs>
         {/* 50% baseline grid */}
         <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="var(--hairline)" strokeWidth="1"
           strokeDasharray="3 6" vectorEffect="non-scaling-stroke" />
         <polygon fill={`url(#lc-${uid})`} points={`${line} ${W},${H} 0,${H}`} />
-        <polyline fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round"
-          strokeLinecap="round" points={line} vectorEffect="non-scaling-stroke" />
+        <polyline fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"
+          strokeLinecap="round" points={line} vectorEffect="non-scaling-stroke"
+          style={{ filter: 'drop-shadow(0 1px 1.5px rgba(0,0,0,.22))' }} />
       </svg>
       {/* 최신 시점 펄스 점 — viewBox가 non-uniform이라 % 좌표로 오버레이 */}
       <span className="pointer-events-none absolute"

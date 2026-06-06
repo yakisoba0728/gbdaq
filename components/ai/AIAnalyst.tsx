@@ -16,6 +16,19 @@ const ANALYZING_MS = 1200 // length of the "분석 중…" illusion
 const REANALYZE_MS = 15000 // re-analyze roughly every 15s
 const MOVE_THRESHOLD = 0.015 // re-analyze early if live price moves notably
 
+// 현재 시장가(군중 확률)를 "이대로 가면" 예상 결과로 정리 — 순수 표시용.
+function projectedOutcome(price: number) {
+  const yes = Math.round(price * 100)
+  const no = 100 - yes
+  const winYes = yes >= no
+  const margin = Math.abs(yes - no)
+  const tag = margin >= 40 ? '사실상 게임 끝 분위기'
+    : margin >= 20 ? '확실한 우세'
+    : margin >= 8 ? '근소 우세'
+    : '초접전, 동전 던지기 각'
+  return { yes, no, winYes, margin, tag }
+}
+
 function Dots() {
   return (
     <span className="inline-flex items-center gap-1" aria-hidden>
@@ -177,6 +190,24 @@ export function AIAnalyst({ m }: { m: DemoMarket }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
           >
+            {/* 이대로 가면? — 현재 시장가(군중) 기준 예상 결과 정리 */}
+            {(() => {
+              const o = projectedOutcome(price)
+              return (
+                <div className={`mb-4 rounded-[12px] border px-3.5 py-3 ${o.winYes ? 'border-up/30 bg-upbg' : 'border-down/30 bg-downbg'}`}>
+                  <div className="flex items-center ty-fine">
+                    <span className="text-muted">📊 이대로 가면</span>
+                    <span className="ml-auto text-faint">{o.tag}</span>
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span className={`ty-body-strong ${o.winYes ? 'text-up' : 'text-down'}`}>&apos;{o.winYes ? '예' : '아니오'}&apos; 승리</span>
+                    <span className="ty-caption nums text-muted">예 {o.yes}% vs 아니오 {o.no}%</span>
+                    <span className={`ml-auto ty-caption-strong nums ${o.winYes ? 'text-up' : 'text-down'}`}>{o.margin}%p 차</span>
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* 큰 예측 — 항상 '예' 확률축으로 표기(아래 'AI vs 군중' 라인과 동일 축).
                 lean 방향은 색상 + vs군중 문구로 전달. */}
             <div className="flex items-baseline gap-2">

@@ -64,13 +64,13 @@
 
 /* ===== Apple type scale (the unbreakable ladder: 300/400/600/700) ===== */
 @layer components {
-  .ty-hero        { font-size: clamp(34px, 6vw, 56px); font-weight:600; line-height:1.07; letter-spacing:-0.015em; }
-  .ty-display     { font-size: clamp(28px, 4.2vw, 40px); font-weight:600; line-height:1.1; letter-spacing:-0.012em; }
-  .ty-display-md  { font-size: clamp(24px, 3vw, 34px); font-weight:600; line-height:1.2; letter-spacing:-0.011em; }
-  .ty-lead        { font-size: clamp(19px, 2.2vw, 24px); font-weight:400; line-height:1.32; letter-spacing:0; }
+  .ty-hero        { font-size: clamp(30px, 6.2vw, 56px); font-weight:600; line-height:1.08; letter-spacing:-0.015em; word-break:keep-all; }
+  .ty-display     { font-size: clamp(23px, 5vw, 40px); font-weight:600; line-height:1.12; letter-spacing:-0.012em; word-break:keep-all; }
+  .ty-display-md  { font-size: clamp(22px, 3vw, 34px); font-weight:600; line-height:1.2; letter-spacing:-0.011em; word-break:keep-all; }
+  .ty-lead        { font-size: clamp(18px, 2.2vw, 24px); font-weight:400; line-height:1.32; letter-spacing:0; word-break:keep-all; }
   .ty-tagline     { font-size:21px; font-weight:600; line-height:1.19; letter-spacing:.006em; }
   .ty-body        { font-size:17px; font-weight:400; line-height:1.47; letter-spacing:-0.022em; }
-  .ty-body-strong { font-size:17px; font-weight:600; line-height:1.24; letter-spacing:-0.022em; }
+  .ty-body-strong { font-size:17px; font-weight:600; line-height:1.24; letter-spacing:-0.022em; word-break:keep-all; }
   .ty-caption     { font-size:14px; font-weight:400; line-height:1.43; letter-spacing:-0.016em; }
   .ty-caption-strong { font-size:14px; font-weight:600; line-height:1.29; letter-spacing:-0.016em; }
   .ty-nav         { font-size:12px; font-weight:400; line-height:1; letter-spacing:-0.01em; }

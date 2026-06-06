@@ -11,7 +11,6 @@ const MotionLink = motion.create(Link)
 export function MarketCard({ m }: { m: DemoMarket }) {
   const { priceOf } = useDemo()
   const p = priceOf(m)
-  const pctColor = p >= 0.5 ? 'text-up' : 'text-down'
   const reduce = useReducedMotion()
   return (
     <MotionLink
@@ -19,23 +18,26 @@ export function MarketCard({ m }: { m: DemoMarket }) {
       initial={reduce ? false : { opacity: 0, y: 8 }}
       animate={reduce ? undefined : { opacity: 1, y: 0 }}
       whileHover={reduce ? undefined : { y: -3 }}
-      className="group flex min-h-[200px] flex-col gap-4 rounded-[18px] border border-hairline bg-canvas p-6 transition active:scale-95"
+      className="group flex flex-col gap-3 rounded-[18px] border border-hairline bg-canvas p-4 transition active:scale-95 sm:p-5"
     >
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-parchment text-xl">{m.icon}</span>
+      <div className="flex items-start gap-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-parchment text-lg">{m.icon}</span>
         <span className="ty-body-strong text-ink">{m.question}</span>
       </div>
-      <div className="flex items-baseline">
-        <span className="ty-caption text-muted">예</span>
-        <AnimatedPercent value={p} className={`ml-auto ty-display-md ${pctColor}`} />
+      {/* 예/아니오 — 색 박스로 또렷하게 구분 */}
+      <div className="mt-auto grid grid-cols-2 gap-2">
+        <div className="rounded-[10px] border border-up/20 bg-upbg px-2.5 py-1.5">
+          <div className="ty-fine text-up">예</div>
+          <AnimatedPercent value={p} className="ty-body-strong leading-none text-up" />
+        </div>
+        <div className="rounded-[10px] border border-down/20 bg-downbg px-2.5 py-1.5">
+          <div className="ty-fine text-down">아니오</div>
+          <AnimatedPercent value={1 - p} className="ty-body-strong leading-none text-down" />
+        </div>
       </div>
-      {/* slim probability bar */}
-      <div className="h-1.5 overflow-hidden rounded-full bg-parchment">
-        <div className={`h-full rounded-full ${p >= 0.5 ? 'bg-up' : 'bg-down'}`} style={{ width: `${Math.round(p * 100)}%` }} />
-      </div>
-      <div className="mt-auto flex items-center justify-between pt-1">
-        <span className="ty-caption text-faint">💰 <span className="nums">{fmtPoints(m.volume)}</span> 상점</span>
-        <span className="ty-caption-strong rounded-full border border-blue px-3.5 py-1 text-blue transition group-hover:bg-blue group-hover:text-white">거래</span>
+      <div className="flex items-center justify-between pt-0.5">
+        <span className="ty-fine text-faint">💰 <span className="nums">{fmtPoints(m.volume)}</span></span>
+        <span className="ty-caption-strong rounded-full border border-blue px-3 py-0.5 text-blue transition group-hover:bg-blue group-hover:text-white">거래</span>
       </div>
     </MotionLink>
   )
