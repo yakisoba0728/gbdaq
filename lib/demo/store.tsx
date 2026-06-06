@@ -137,7 +137,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const leaderboard = [
     ...DEMO_USERS.map(u => ({ ...u })),
-    { name: '나 (게스트)', balance: s.balance, color: '#1d1d1f', me: true },
+    { name: '나 (게스트)', balance: s.balance, color: '#7c3aed', me: true },
   ].sort((a, b) => b.balance - a.balance)
 
   return <Ctx.Provider value={{ ...s, buy, sell, getMarket, priceOf, leaderboard, reset }}>{children}</Ctx.Provider>
