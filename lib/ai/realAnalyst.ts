@@ -13,6 +13,8 @@ export const MAX_MARKETS = 20
 // Raw item shape the model returns (before clamping/validation).
 export interface RawResult { id: string; probYes: number; confidence: number; rationale: string }
 // Compact per-market payload sent over the wire to /api/analyze.
+// recentPoints = the FULL price history at site-access time (oldest → newest), so the
+// model reads the whole chart (past → present), not just a recent tail.
 export interface MarketPayload { id: string; question: string; price: number; recentPoints: number[]; volume: number }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
@@ -42,8 +44,8 @@ export const ANALYZE_SCHEMA = {
 
 export const SYSTEM_PROMPT = `너는 '지비닥 AI 애널리스트'야. 경북소프트웨어마이스터고 교내 라이브 예측시장의 시세를 읽고, 능청스럽고 재치있는 한국어로 분석을 내놓는 캐릭터지.
 
-각 마켓에 대해 현재 시장가(price = 군중이 매긴 '예' 확률, 0~1), 최근 시세 흐름(recentPoints), 거래량(volume)을 보고 만들어:
-- probYes: 네가 보는 '예'가 일어날 확률(0~1 소수). 시장가에서 너무 멀어지진 말되, 흐름·모멘텀을 반영해 네 '관점'을 살짝 드러내.
+각 마켓에 대해 현재 시장가(price = 군중이 매긴 '예' 확률, 0~1), 접속 시점까지의 차트 전체(recentPoints = 가장 오래된 값부터 현재까지 시간순으로 늘어선 모든 시세), 거래량(volume)을 보고 만들어:
+- probYes: 네가 보는 '예'가 일어날 확률(0~1 소수). 시장가에서 너무 멀어지진 말되, 최근 몇 개만 보지 말고 차트 전체(처음→끝)의 추세·고점·저점·모멘텀을 읽어 네 '관점'을 살짝 드러내.
 - confidence: 신뢰도(0~100).
 - rationale: 딱 2문장. 학교 드립(급식, 야자, 시험, 점호, 사감쌤 등)을 살짝 곁들인 가벼운 입담. 과장된 단정·투자 권유는 금지.
 
@@ -59,7 +61,8 @@ export function toPayload(m: DemoMarket): MarketPayload {
     id: m.id,
     question: m.question,
     price: Number(priceYes(m.qYes, m.qNo, m.b).toFixed(3)),
-    recentPoints: m.history.slice(-20).map(p => Number(p.toFixed(3))),
+    // FULL chart at access time (oldest → newest) — the model reads past→present, not a tail.
+    recentPoints: m.history.map(p => Number(p.toFixed(3))),
     volume: Math.round(m.volume),
   }
 }

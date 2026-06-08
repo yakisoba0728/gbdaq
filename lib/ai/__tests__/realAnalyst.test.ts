@@ -71,11 +71,13 @@ describe('realAnalyst.mergeAnalyses', () => {
 })
 
 describe('realAnalyst payload helpers', () => {
-  it('toPayload rounds price/points and trims history to last 20', () => {
+  it('toPayload rounds price/volume and sends the FULL history (oldest → newest)', () => {
     const long = Array.from({ length: 50 }, (_, i) => i / 100)
     const p = toPayload(mk('m1', { history: long, volume: 12.7 }))
     expect(p.id).toBe('m1')
-    expect(p.recentPoints.length).toBe(20)
+    expect(p.recentPoints.length).toBe(50) // full chart, not a tail
+    expect(p.recentPoints[0]).toBeCloseTo(0, 4) // oldest first
+    expect(p.recentPoints[49]).toBeCloseTo(0.49, 4) // newest last
     expect(p.volume).toBe(13)
     expect(typeof p.price).toBe('number')
   })
