@@ -3,13 +3,15 @@
 // 이제 실제 Claude(Haiku) 호출 결과를 보여준다. 페이지 진입(마운트) 시 /api/analyze를
 // 딱 1회 호출하고, "분석 중…" 셔머가 실제 네트워크 지연을 덮는다. 새로고침=재호출.
 // 실패하면 마켓별 휴리스틱(fakeAnalyst)으로 폴백한다(useAiAnalyses 내부).
-// 시세(군중 확률)는 DemoProvider가 4초마다 갱신 → "이대로 가면" 배너/AI vs 군중 라인은
-// 라이브로 움직이고, AI 판정(probYes/confidence/rationale)만 1회 고정된다.
+// 시세(군중 확률)는 DemoProvider가 4초마다 갱신된다. AI '관점'(edge=군중과의 괴리)을 잡아
+// 현재가에 다시 앵커(liveView)하므로 "AI 예측" 숫자는 매 틱 차트를 따라간다 → 시장가와
+// 절대 멀어져 보이지 않음. 진짜 재분석(rationale/edge 갱신)은 useAiAnalyses가 길게(90s) 한다.
 import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { DemoMarket } from '@/lib/demo/seed'
 import { useDemo } from '@/lib/demo/store'
 import { useAiAnalyses } from '@/lib/ai/useAiAnalyses'
+import { liveView } from '@/lib/ai/realAnalyst'
 import { fmtPct } from '@/lib/format'
 
 const ACCENT = 'var(--blue)'
@@ -60,17 +62,19 @@ export function AIAnalyst({ m }: { m: DemoMarket }) {
   const { priceOf } = useDemo()
   const price = priceOf(m) // live (군중 확률) — 매 틱 갱신
 
-  // 마운트 시 이 마켓 1개로 딱 1회 호출. m.id로 메모 → 같은 마켓에서 재호출 없음.
+  // 라이브 m을 넘긴다(useAiAnalyses가 ref로 읽어 4초 틱엔 재호출 안 함). m.id로 메모해
+  // 다른 마켓으로 바뀔 때만 새 배열.
   const markets = useMemo(() => [m], [m.id]) // eslint-disable-line react-hooks/exhaustive-deps
   const { byId, loading } = useAiAnalyses(markets)
   const result = byId[m.id]
   const showShimmer = loading || !result
 
-  const leanYes = result?.lean === 'yes'
+  // AI 관점을 현재가에 재앵커 → 표시 확률/괴리가 매 틱 차트를 따라간다(고정값 아님).
+  const lv = result ? liveView(result, price) : null
+  const leanYes = lv?.lean === 'yes'
   const leanColor = leanYes ? 'text-up' : 'text-down'
-  const bullish = (result?.vsCrowd ?? 0) > 0
-  const vsCrowdColor = bullish ? 'text-up' : (result?.vsCrowd ?? 0) < 0 ? 'text-down' : 'text-muted'
-  const diffPct = Math.round(Math.abs(result?.vsCrowd ?? 0) * 100)
+  const vsCrowdColor = (lv?.vs ?? 0) > 0 ? 'text-up' : (lv?.vs ?? 0) < 0 ? 'text-down' : 'text-muted'
+  const diffPct = lv?.diffPct ?? 0
   const badge = result?.source === 'fallback' ? '오프라인 추정 모드' : 'Claude Haiku · 실시간 분석'
 
   return (
@@ -131,7 +135,7 @@ export function AIAnalyst({ m }: { m: DemoMarket }) {
 
             <div className="flex items-baseline gap-2">
               <span className="ty-caption text-muted">AI 예측</span>
-              <span className={`ty-display nums leading-none ${leanColor}`}>예 {fmtPct(result.probYes)}</span>
+              <span className={`ty-display nums leading-none ${leanColor}`}>예 {fmtPct(lv?.prob ?? result.probYes)}</span>
               <span className={`ty-caption-strong ${leanColor}`}>({leanYes ? "'예' 우세" : "'아니오' 우세"})</span>
             </div>
 

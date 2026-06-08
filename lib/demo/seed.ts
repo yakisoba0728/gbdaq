@@ -6,21 +6,28 @@ const B = 15
 // qYes that yields `price` when qNo = 0 (LMSR: price = sigmoid((qYes-qNo)/b))
 function qFor(price: number, b = B) { return b * Math.log(price / (1 - price)) }
 
-// a gentle sine walk ending exactly at the target price (so first-load charts aren't flat)
+// Deterministic (SSR-safe) multi-frequency walk ending exactly at the target price.
+// Layered sines give a jagged, "real stock"-looking first-load chart — no Math.random
+// so server and client render identical history (no hydration mismatch).
 function seedHistory(target: number, n = 40): number[] {
   const a: number[] = []
-  for (let i = 0; i < n; i++) a.push(Math.max(0.04, Math.min(0.96, target + Math.sin((i - n + 1) / 6) * 0.05)))
+  for (let i = 0; i < n; i++) {
+    const noise = Math.sin(i * 1.3) * 0.06 + Math.sin(i * 0.7 + 1.5) * 0.045 + Math.sin(i * 2.7 + 0.5) * 0.03
+    a.push(Math.max(0.05, Math.min(0.95, target + noise)))
+  }
   a[n - 1] = target
   return a
 }
 
 export interface DemoMarket {
   id: string; slug: string; category: string; icon: string; question: string; rules: string
-  b: number; qYes: number; qNo: number; volume: number; history: number[]
+  b: number; qYes: number; qNo: number; volume: number; history: number[]; target: number
 }
 
+// `target` = the market's seeded "home" price; the live engine mean-reverts gently toward it
+// so each market keeps its character (88% vs 34%) instead of all drifting to 50%.
 const M = (id: string, slug: string, category: string, icon: string, question: string, rules: string, target: number, volume: number): DemoMarket =>
-  ({ id, slug, category, icon, question, rules, b: B, qYes: qFor(target), qNo: 0, volume, history: seedHistory(target) })
+  ({ id, slug, category, icon, question, rules, b: B, qYes: qFor(target), qNo: 0, volume, history: seedHistory(target), target })
 
 export const SEED_MARKETS: DemoMarket[] = [
   M('m1', 'food-tangsu', '급식', '🍱', '다음 주 급식에 탕수육 나온다?', '급식 식단표 공지 기준 정산. 부먹·찍먹 논쟁은 별도 상장 예정 🍖', 0.73, 92),

@@ -75,10 +75,13 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         markets: prev.markets.map(m => {
           const p = priceYes(m.qYes, m.qNo, m.b)
-          const jump = Math.random() < 0.15 ? (Math.random() - 0.5) * 0.10 : (Math.random() - 0.5) * 0.035
-          const np = Math.min(0.97, Math.max(0.03, p + jump))
+          // 실제 주식처럼 더 큰 변동성: 평소 ±~3.5%p, 가끔(20%) ±~8%p 점프.
+          const shock = Math.random() < 0.2 ? (Math.random() - 0.5) * 0.16 : (Math.random() - 0.5) * 0.07
+          // 약한 평균회귀 — 0.5가 아니라 각 마켓 고유 시드 수준(target)으로 당겨 극단 고착·전 마켓 50% 수렴 방지.
+          const drift = (m.target - p) * 0.025
+          const np = Math.min(0.97, Math.max(0.03, p + drift + shock))
           const qYes = m.qNo + m.b * Math.log(np / (1 - np))
-          return { ...m, qYes, history: [...m.history, np].slice(-CAP), volume: m.volume + Math.random() * 1.5 }
+          return { ...m, qYes, history: [...m.history, np].slice(-CAP), volume: m.volume + Math.random() * 2 }
         }),
       }))
     }, TICK_MS)

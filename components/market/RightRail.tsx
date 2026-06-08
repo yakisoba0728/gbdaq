@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { fmtPct } from '@/lib/format'
 import { useDemo } from '@/lib/demo/store'
 import { useAiAnalyses } from '@/lib/ai/useAiAnalyses'
+import { liveView } from '@/lib/ai/realAnalyst'
 import type { AIAnalysis } from '@/lib/ai/fakeAnalyst'
 import type { DemoMarket } from '@/lib/demo/seed'
 
@@ -16,15 +17,15 @@ export function RightRail({ markets }: { markets: DemoMarket[] }) {
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
     .slice(0, 4)
 
-  // 🤖 AI 오늘의 픽 — 홈 진입(마운트) 시 화면의 마켓 전체를 한 번의 호출(/api/analyze)에
-  // 묶어 실제 Claude로 분석한다. 탭 전환은 재호출하지 않고(useAiAnalyses가 마운트 스냅샷
-  // 고정), 캐시된 분석에서 현재 보이는 마켓 중 AI가 군중과 가장 크게 갈리는 마켓을 고른다.
+  // 🤖 AI 오늘의 픽 — 화면의 마켓 전체를 /api/analyze로 분석(useAiAnalyses가 90s마다 재읽기).
+  // AI 관점을 현재가에 재앵커(liveView)해, 지금 차트 기준 AI가 군중과 가장 크게 갈리는 마켓을 고른다.
   const { byId, loading } = useAiAnalyses(markets)
-  let pick: { m: DemoMarket; a: AIAnalysis } | null = null
+  let pick: { m: DemoMarket; a: AIAnalysis; lv: ReturnType<typeof liveView> } | null = null
   for (const m of markets) {
     const a = byId[m.id]
     if (!a) continue
-    if (!pick || Math.abs(a.vsCrowd) > Math.abs(pick.a.vsCrowd)) pick = { m, a }
+    const lv = liveView(a, priceOf(m))
+    if (!pick || lv.diffPct > pick.lv.diffPct) pick = { m, a, lv }
   }
 
   return (
@@ -60,12 +61,12 @@ export function RightRail({ markets }: { markets: DemoMarket[] }) {
             <p className="ty-caption-strong text-ink">{pick.m.icon} {pick.m.question}</p>
             <div className="ty-caption mt-2">
               <span className="text-muted">AI: </span>
-              <span className={`ty-caption-strong nums ${pick.a.lean === 'yes' ? 'text-up' : 'text-down'}`}>
-                &apos;{pick.a.lean === 'yes' ? '예' : '아니오'}&apos; {fmtPct(pick.a.probYes)}
+              <span className={`ty-caption-strong nums ${pick.lv.lean === 'yes' ? 'text-up' : 'text-down'}`}>
+                &apos;{pick.lv.lean === 'yes' ? '예' : '아니오'}&apos; {fmtPct(pick.lv.prob)}
               </span>
               <span className="text-muted nums"> (신뢰도 {pick.a.confidence}%)</span>
             </div>
-            <div className="ty-fine nums mt-1 text-faint">시장가 {fmtPct(priceOf(pick.m))} 대비 {Math.round(Math.abs(pick.a.vsCrowd) * 100)}%p 차이</div>
+            <div className="ty-fine nums mt-1 text-faint">시장가 {fmtPct(priceOf(pick.m))} 대비 {pick.lv.diffPct}%p 차이</div>
           </Link>
         ) : (
           <p className="ty-caption text-muted">{loading ? 'AI가 오늘의 픽을 고르는 중… 🤖' : '표시할 픽이 없어요'}</p>

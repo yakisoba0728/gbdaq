@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { mergeAnalyses, toPayload, validPayload, type RawResult } from '@/lib/ai/realAnalyst'
+import { mergeAnalyses, toPayload, validPayload, liveView, type RawResult } from '@/lib/ai/realAnalyst'
 import type { DemoMarket } from '@/lib/demo/seed'
+import type { AIAnalysis } from '@/lib/ai/fakeAnalyst'
 
 // minimal market: qYes=0,qNo=0,b=15 → priceYes = 0.5 (so vsCrowd = probYes - 0.5)
 const mk = (id: string, over: Partial<DemoMarket> = {}): DemoMarket => ({
   id, slug: id, category: '급식', icon: '🍱', question: `${id}?`, rules: '',
-  b: 15, qYes: 0, qNo: 0, volume: 50, history: [0.5, 0.5, 0.5], ...over,
+  b: 15, qYes: 0, qNo: 0, volume: 50, history: [0.5, 0.5, 0.5], target: 0.5, ...over,
 })
 
 describe('realAnalyst.mergeAnalyses', () => {
@@ -84,5 +85,29 @@ describe('realAnalyst payload helpers', () => {
     expect(validPayload({ id: 'a' })).toBe(false)
     expect(validPayload(null)).toBe(false)
     expect(validPayload({ id: 1, question: 'q', price: 0.5, recentPoints: [], volume: 1 })).toBe(false)
+  })
+})
+
+describe('realAnalyst.liveView (re-anchor to live price)', () => {
+  const an = (vsCrowd: number): AIAnalysis =>
+    ({ probYes: 0.5 + vsCrowd, confidence: 70, lean: vsCrowd >= 0 ? 'yes' : 'no', rationale: 'x', dataCount: 0, vsCrowd })
+
+  it('holds the AI edge and tracks the live price', () => {
+    const a = an(0.1) // edge +0.1
+    expect(liveView(a, 0.6).prob).toBeCloseTo(0.7, 4) // 0.6 + 0.1
+    expect(liveView(a, 0.4).prob).toBeCloseTo(0.5, 4) // tracks chart down
+    expect(liveView(a, 0.4).vs).toBeCloseTo(0.1, 4)   // edge preserved
+    expect(liveView(a, 0.4).diffPct).toBe(10)
+  })
+
+  it('lean follows the re-anchored prob across 0.5', () => {
+    const a = an(0.05)
+    expect(liveView(a, 0.5).lean).toBe('yes') // 0.55
+    expect(liveView(a, 0.4).lean).toBe('no')  // 0.45
+  })
+
+  it('clamps prob to [0.05, 0.95]', () => {
+    expect(liveView(an(0.1), 0.92).prob).toBe(0.95)
+    expect(liveView(an(-0.1), 0.08).prob).toBe(0.05)
   })
 })

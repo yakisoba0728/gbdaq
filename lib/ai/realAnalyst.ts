@@ -120,3 +120,14 @@ export function mergeAnalyses(markets: DemoMarket[], raw: RawResult[] | null): R
   }
   return out
 }
+
+// Re-anchor a fetched analysis onto the LIVE price so the displayed AI number tracks the
+// chart every tick. We hold the AI's *edge* (vsCrowd = how much it disagreed with the crowd
+// at read time) and let the *level* follow the live price. This keeps "AI 예측" and "시장가"
+// sensibly related at any instant instead of drifting apart between (infrequent) real re-reads.
+export interface LiveView { prob: number; lean: 'yes' | 'no'; vs: number; diffPct: number }
+export function liveView(a: AIAnalysis, livePrice: number): LiveView {
+  const prob = Number(clamp(livePrice + a.vsCrowd, 0.05, 0.95).toFixed(4))
+  const vs = Number((prob - livePrice).toFixed(4))
+  return { prob, lean: prob >= 0.5 ? 'yes' : 'no', vs, diffPct: Math.round(Math.abs(vs) * 100) }
+}
