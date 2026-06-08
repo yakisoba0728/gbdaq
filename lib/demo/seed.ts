@@ -12,7 +12,9 @@ function qFor(price: number, b = B) { return b * Math.log(price / (1 - price)) }
 function seedHistory(target: number, n = 40): number[] {
   const a: number[] = []
   for (let i = 0; i < n; i++) {
-    const noise = Math.sin(i * 1.3) * 0.06 + Math.sin(i * 0.7 + 1.5) * 0.045 + Math.sin(i * 2.7 + 0.5) * 0.03
+    // 더 큰 진폭 + 빠른 고주파 항(i*4.9) = 실제 주식처럼 출렁이고 잔결 많은 첫 차트.
+    const noise = Math.sin(i * 1.3) * 0.08 + Math.sin(i * 0.7 + 1.5) * 0.06
+      + Math.sin(i * 2.7 + 0.5) * 0.045 + Math.sin(i * 4.9 + 2.1) * 0.03
     a.push(Math.max(0.05, Math.min(0.95, target + noise)))
   }
   a[n - 1] = target
