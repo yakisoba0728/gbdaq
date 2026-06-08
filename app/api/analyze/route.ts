@@ -1,12 +1,22 @@
 // Server-only Route Handler. Holds the Anthropic API key (server env) and proxies
 // a single batched analysis request to Claude Haiku via forced tool use. The browser
-// never sees the key. Defense: validate body + cap markets at MAX_MARKETS. No caching.
+// never sees the key. Defense: require a valid demo session, validate body, cap markets at
+// MAX_MARKETS, and bound per-market input length (lib/ai/realAnalyst). No caching.
 import Anthropic from '@anthropic-ai/sdk'
+import { cookies } from 'next/headers'
+import { verifySession, SESSION_COOKIE } from '@/lib/auth/session'
 import { ANALYZE_SCHEMA, SYSTEM_PROMPT, buildUserContent, validPayload, MAX_MARKETS, type MarketPayload, type RawResult } from '@/lib/ai/realAnalyst'
 
 export const runtime = 'nodejs' // Anthropic SDK needs the Node runtime (not edge)
 
 export async function POST(request: Request) {
+  // Demo-access gate: reject anyone without a valid session BEFORE any (paid) model call.
+  const secret = process.env.DEMO_PASSWORD ?? ''
+  const session = (await cookies()).get(SESSION_COOKIE)?.value
+  if (!verifySession(secret, session, Math.floor(Date.now() / 1000))) {
+    return Response.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
   let body: unknown
   try { body = await request.json() } catch { return Response.json({ error: 'bad json' }, { status: 400 }) }
 
@@ -19,7 +29,7 @@ export async function POST(request: Request) {
     const client = new Anthropic() // reads ANTHROPIC_API_KEY from the environment
     const msg = await client.messages.create({
       model: 'claude-haiku-4-5',
-      max_tokens: 8192,
+      max_tokens: 4096, // 2-sentence rationales; lowered from 8192 to cap worst-case output cost
       system: SYSTEM_PROMPT,
       // `as unknown as` bridges our readonly JSON-schema literal into the SDK's input_schema type.
       tools: [{ name: 'submit_analyses', description: '각 마켓 분석 결과를 제출한다.', input_schema: ANALYZE_SCHEMA as unknown as Anthropic.Tool['input_schema'] }],

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { priceYes, costToBuyShares, sharesForAmount, proceedsForSell } from '@/lib/lmsr'
+import { priceYes, costToBuyShares, sharesForAmount, proceedsForSell, quoteBuy } from '@/lib/lmsr'
 
 const b = 200
 describe('LMSR', () => {
@@ -28,5 +28,22 @@ describe('LMSR', () => {
     // after buying: q_yes = shares
     const proceeds = proceedsForSell(shares, 0, b, 'yes', shares)
     expect(proceeds).toBeCloseTo(cost, 4)
+  })
+
+  it('quoteBuy: repeated small buys then sell-all never profits (no rounding arbitrage)', () => {
+    // Reproduces the farming recipe (buy 1상점 ×k, then sell all) on a seeded b=15 market.
+    // ceil-cost on buy + floor-proceeds on sell ⇒ net balance change must be <= 0 for all k.
+    const bb = 15
+    const start = bb * Math.log(0.73 / 0.27) // a non-50% seeded price
+    for (const k of [1, 2, 3, 4, 5, 8, 12]) {
+      let qy = start, held = 0, bal = 0
+      for (let i = 0; i < k; i++) {
+        const { shares, cost } = quoteBuy(qy, 0, bb, 'yes', 1)
+        qy += shares; held += shares; bal -= cost
+      }
+      const proceeds = Math.max(0, Math.floor(proceedsForSell(qy, 0, bb, 'yes', held)))
+      bal += proceeds
+      expect(bal).toBeLessThanOrEqual(0)
+    }
   })
 })

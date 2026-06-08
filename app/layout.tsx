@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { ToastProvider } from '@/components/ui/Toast'
 import { DemoProvider } from '@/lib/demo/store'
 import { Nav } from '@/components/Nav'
+import { DemoGate } from '@/components/auth/DemoGate'
 
 // SF Pro is Apple's system font (resolved via -apple-system / system-ui on Apple devices).
 // Inter is the documented web fallback for non-Apple platforms.
@@ -20,12 +21,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeProvider>
-          <DemoProvider>
-            <Nav />
-            <ToastProvider>
-              <main>{children}</main>
-            </ToastProvider>
-          </DemoProvider>
+          <DemoGate>
+            <DemoProvider>
+              <Nav />
+              <ToastProvider>
+                <main>{children}</main>
+              </ToastProvider>
+            </DemoProvider>
+          </DemoGate>
         </ThemeProvider>
       </body>
     </html>

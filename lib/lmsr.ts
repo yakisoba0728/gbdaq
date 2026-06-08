@@ -33,3 +33,13 @@ export function proceedsForSell(qy: number, qn: number, b: number, side: Side, n
   const after = side === 'yes' ? C(qy - n, qn, b) : C(qy, qn - n, b)
   return C(qy, qn, b) - after
 }
+
+// 매수 견적 — 금액(amount 상점)으로 체결되는 정수 지분 수(shares)와 그 지분의 비용(cost).
+// cost는 올림(ceil), 매도 수령은 store에서 내림(floor) → 라운딩을 항상 하우스 쪽으로 몰아
+// 매수→매도 왕복·반복 파밍으로 상점이 늘어나는 무위험 차익을 원천 차단한다.
+export function quoteBuy(qy: number, qn: number, b: number, side: Side, amount: number): { shares: number; cost: number } {
+  const { shares } = sharesForAmount(qy, qn, b, side, amount)
+  const sh = Math.max(1, Math.round(shares)) // whole-unit shares (scarce integer economy)
+  const cost = Math.max(1, Math.ceil(costToBuyShares(qy, qn, b, side, sh)))
+  return { shares: sh, cost }
+}

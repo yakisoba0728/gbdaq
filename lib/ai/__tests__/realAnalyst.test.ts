@@ -88,6 +88,13 @@ describe('realAnalyst payload helpers', () => {
     expect(validPayload(null)).toBe(false)
     expect(validPayload({ id: 1, question: 'q', price: 0.5, recentPoints: [], volume: 1 })).toBe(false)
   })
+
+  it('validPayload rejects oversized question / recentPoints (token-amplification caps)', () => {
+    expect(validPayload({ id: 'a', question: 'x'.repeat(501), price: 0.5, recentPoints: [0.5], volume: 1 })).toBe(false)
+    expect(validPayload({ id: 'a', question: 'q', price: 0.5, recentPoints: new Array(301).fill(0.5), volume: 1 })).toBe(false)
+    // exactly at the caps is still accepted
+    expect(validPayload({ id: 'a', question: 'x'.repeat(500), price: 0.5, recentPoints: new Array(300).fill(0.5), volume: 1 })).toBe(true)
+  })
 })
 
 describe('realAnalyst.liveView (re-anchor to live price)', () => {

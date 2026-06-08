@@ -67,13 +67,19 @@ export function toPayload(m: DemoMarket): MarketPayload {
   }
 }
 
+// Caps bound the per-request token cost so a crafted payload can't amplify the model
+// bill. Legit payloads are tiny (short question, ≤120-point history from the store).
+export const MAX_QUESTION_LEN = 500
+export const MAX_POINTS = 300
 export function validPayload(p: unknown): p is MarketPayload {
   if (!p || typeof p !== 'object') return false
   const o = p as Record<string, unknown>
   return typeof o.id === 'string'
     && typeof o.question === 'string'
+    && o.question.length <= MAX_QUESTION_LEN
     && Number.isFinite(o.price)
     && Array.isArray(o.recentPoints)
+    && o.recentPoints.length <= MAX_POINTS
     && Number.isFinite(o.volume)
 }
 

@@ -3,12 +3,12 @@ import { useState, useMemo } from 'react'
 import type { Side } from '@/lib/types'
 import type { DemoMarket } from '@/lib/demo/seed'
 import { useDemo } from '@/lib/demo/store'
-import { sharesForAmount, proceedsForSell } from '@/lib/lmsr'
+import { quoteBuy, proceedsForSell } from '@/lib/lmsr'
 import { fmtPct, fmtPoints } from '@/lib/format'
 import { useToast } from '@/components/ui/Toast'
 
 export function TradePanel({ m }: { m: DemoMarket }) {
-  const { buy, sell, priceOf, positions } = useDemo()
+  const { buy, sell, priceOf, positions, balance } = useDemo()
   const toast = useToast()
   const [mode, setMode] = useState<'buy' | 'sell'>('buy')
   const [side, setSide] = useState<Side>('yes')
@@ -17,17 +17,22 @@ export function TradePanel({ m }: { m: DemoMarket }) {
   const [msg, setMsg] = useState('')
   const held = side === 'yes' ? (positions[m.id]?.yes || 0) : (positions[m.id]?.no || 0)
   const pYes = priceOf(m)
+  const maxBuy = Math.max(1, Math.floor(balance)) // can't spend more than you hold
 
   const preview = useMemo(() => {
-    if (mode === 'buy') { if (amount <= 0) return null; return sharesForAmount(m.qYes, m.qNo, m.b, side, amount) }
+    if (mode === 'buy') {
+      if (amount <= 0) return null
+      const { shares: sh, cost } = quoteBuy(m.qYes, m.qNo, m.b, side, Math.min(amount, maxBuy))
+      return { shares: sh, cost }
+    }
     if (shares <= 0) return null
-    const proceeds = proceedsForSell(m.qYes, m.qNo, m.b, side, shares)
-    return { shares, cost: -proceeds, priceAfter: 0 }
-  }, [m, mode, side, amount, shares])
+    const proceeds = Math.max(0, Math.floor(proceedsForSell(m.qYes, m.qNo, m.b, side, shares)))
+    return { shares, cost: -proceeds }
+  }, [m, mode, side, amount, shares, maxBuy])
 
   function submit() {
     setMsg('')
-    const res = mode === 'buy' ? buy(m.slug, side, amount) : sell(m.slug, side, shares)
+    const res = mode === 'buy' ? buy(m.slug, side, Math.min(amount, maxBuy)) : sell(m.slug, side, shares)
     if (res.error) {
       const friendly = res.error === 'insufficient balance' ? '상점이 부족해요 😭' : res.error === 'insufficient shares' ? '그만큼은 안 갖고 있어요' : res.error
       setMsg(friendly); toast(friendly, 'err'); return
@@ -49,8 +54,8 @@ export function TradePanel({ m }: { m: DemoMarket }) {
       {mode === 'buy' ? (
         <>
           <label htmlFor="trade-amount" className="ty-caption text-muted">금액 (상점)</label>
-          <input id="trade-amount" type="number" min={1} step={1} value={amount} onChange={e => setAmount(Math.max(1, Math.floor(Number(e.target.value) || 1)))} className="mb-3 mt-1.5 w-full rounded-[11px] border border-hairline bg-pearl px-4 py-3 ty-display-md nums text-ink focus-visible:outline-2 focus-visible:outline-bluefocus" />
-          <div className="mb-4 flex gap-2">{[1, 5, 10].map(v => <button key={v} onClick={() => setAmount(a => a + v)} className="flex-1 rounded-full bg-pearl py-2.5 ty-caption nums text-muted transition active:scale-95">+{v}</button>)}</div>
+          <input id="trade-amount" type="number" min={1} max={maxBuy} step={1} value={amount} onChange={e => setAmount(Math.max(1, Math.min(maxBuy, Math.floor(Number(e.target.value) || 1))))} className="mb-3 mt-1.5 w-full rounded-[11px] border border-hairline bg-pearl px-4 py-3 ty-display-md nums text-ink focus-visible:outline-2 focus-visible:outline-bluefocus" />
+          <div className="mb-4 flex gap-2">{[1, 5, 10].map(v => <button key={v} onClick={() => setAmount(a => Math.min(maxBuy, a + v))} className="flex-1 rounded-full bg-pearl py-2.5 ty-caption nums text-muted transition active:scale-95">+{v}</button>)}</div>
         </>
       ) : (
         <>
@@ -63,7 +68,7 @@ export function TradePanel({ m }: { m: DemoMarket }) {
       {preview && (
         <div className="mb-4 rounded-[11px] bg-pearl p-3 ty-caption text-muted">
           {mode === 'buy'
-            ? <>예상 지분 <b className="ty-caption-strong nums text-ink">{Math.round(preview.shares)}주</b> · 정산 시 최대 <b className="ty-caption-strong nums text-ink">{Math.round(preview.shares)} 상점</b></>
+            ? <>예상 지분 <b className="ty-caption-strong nums text-ink">{preview.shares}주</b> · 비용 <b className="ty-caption-strong nums text-ink">{fmtPoints(preview.cost)} 상점</b></>
             : <>예상 수령 <b className="ty-caption-strong nums text-ink">{fmtPoints(Math.max(0, -preview.cost))} 상점</b></>}
         </div>
       )}

@@ -1,6 +1,6 @@
 'use client'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { priceYes, sharesForAmount, proceedsForSell } from '@/lib/lmsr'
+import { priceYes, quoteBuy, proceedsForSell } from '@/lib/lmsr'
 import type { Side } from '@/lib/types'
 import { SEED_MARKETS, DEMO_USERS, START_BALANCE, type DemoMarket } from './seed'
 
@@ -95,18 +95,19 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       const m = prev.markets.find(x => x.slug === slug)
       if (!m) { error = 'not found'; return prev }
       if (!(amount > 0)) { error = 'amount'; return prev }
-      if (prev.balance < amount) { error = 'insufficient balance'; return prev }
-      const { shares } = sharesForAmount(m.qYes, m.qNo, m.b, side, amount)
-      const sh = Math.max(1, Math.round(shares)) // whole-unit shares (scarce integer economy)
+      // Charge the rounded shares' actual (ceil) cost — NOT the raw `amount` — so the
+      // 'paid == value moved' invariant holds and rounding can't be farmed for free 상점.
+      const { shares: sh, cost } = quoteBuy(m.qYes, m.qNo, m.b, side, amount)
+      if (prev.balance < cost) { error = 'insufficient balance'; return prev }
       const qYes = side === 'yes' ? m.qYes + sh : m.qYes
       const qNo = side === 'no' ? m.qNo + sh : m.qNo
       const np = priceYes(qYes, qNo, m.b)
-      const balance = prev.balance - amount
+      const balance = prev.balance - cost
       return {
-        markets: prev.markets.map(x => x.id === m.id ? { ...x, qYes, qNo, volume: x.volume + amount, history: [...x.history, np].slice(-CAP) } : x),
+        markets: prev.markets.map(x => x.id === m.id ? { ...x, qYes, qNo, volume: x.volume + cost, history: [...x.history, np].slice(-CAP) } : x),
         balance,
         positions: { ...prev.positions, [m.id]: { yes: (prev.positions[m.id]?.yes || 0) + (side === 'yes' ? sh : 0), no: (prev.positions[m.id]?.no || 0) + (side === 'no' ? sh : 0) } },
-        ledger: [{ id: rid(), type: 'trade_buy' as const, amount: -amount, balanceAfter: balance, ts: Date.now(), marketId: m.id }, ...prev.ledger].slice(0, 100),
+        ledger: [{ id: rid(), type: 'trade_buy' as const, amount: -cost, balanceAfter: balance, ts: Date.now(), marketId: m.id }, ...prev.ledger].slice(0, 100),
       }
     })
     return error ? { error } : {}
@@ -120,7 +121,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       if (!(shares > 0)) { error = 'shares'; return prev }
       const held = side === 'yes' ? (prev.positions[m.id]?.yes || 0) : (prev.positions[m.id]?.no || 0)
       if (held < shares) { error = 'insufficient shares'; return prev }
-      const proc = Math.round(proceedsForSell(m.qYes, m.qNo, m.b, side, shares)) // whole 상점
+      const proc = Math.max(0, Math.floor(proceedsForSell(m.qYes, m.qNo, m.b, side, shares))) // floor → no rounding edge to farm
       const qYes = side === 'yes' ? m.qYes - shares : m.qYes
       const qNo = side === 'no' ? m.qNo - shares : m.qNo
       const np = priceYes(qYes, qNo, m.b)
