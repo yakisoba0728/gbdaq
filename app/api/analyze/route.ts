@@ -5,7 +5,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { cookies } from 'next/headers'
 import { verifySession, SESSION_COOKIE } from '@/lib/auth/session'
-import { ANALYZE_SCHEMA, SYSTEM_PROMPT, buildUserContent, validPayload, MAX_MARKETS, type MarketPayload, type RawResult } from '@/lib/ai/realAnalyst'
+import { ANALYZE_SCHEMA, SYSTEM_PROMPT, buildUserContent, validPayload, canonicalizeMarkets, MAX_MARKETS, type MarketPayload, type RawResult } from '@/lib/ai/realAnalyst'
 import { take, bumpDaily, clientIp, ANALYZE_SESSION, ANALYZE_IP, ANALYZE_DAILY, analyzeSessionStore, analyzeIpStore, dailyState } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs' // Anthropic SDK needs the Node runtime (not edge)
@@ -40,6 +40,11 @@ export async function POST(request: Request) {
     return Response.json({ error: 'invalid markets' }, { status: 400 })
   }
 
+  // CAN-001: bind to server-owned seed markets — drop unknown ids and replace the caller's
+  // question with the canonical seed question, so caller free text never enters the prompt.
+  const canon = canonicalizeMarkets(markets as MarketPayload[])
+  if (canon.length === 0) return Response.json({ error: 'invalid markets' }, { status: 400 })
+
   // Global daily budget — checked AFTER validation so invalid payloads never consume it.
   if (!bumpDaily(dailyState, ANALYZE_DAILY, now).ok) return Response.json({ error: 'budget' }, { status: 503 })
 
@@ -52,7 +57,7 @@ export async function POST(request: Request) {
       // `as unknown as` bridges our readonly JSON-schema literal into the SDK's input_schema type.
       tools: [{ name: 'submit_analyses', description: '각 마켓 분석 결과를 제출한다.', input_schema: ANALYZE_SCHEMA as unknown as Anthropic.Tool['input_schema'] }],
       tool_choice: { type: 'tool', name: 'submit_analyses' },
-      messages: [{ role: 'user', content: buildUserContent(markets as MarketPayload[]) }],
+      messages: [{ role: 'user', content: buildUserContent(canon) }],
     })
     const block = msg.content.find((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
     const results = block ? ((block.input as { results?: RawResult[] }).results ?? []) : []

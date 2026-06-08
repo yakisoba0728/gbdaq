@@ -6,7 +6,7 @@
 // (fakeAnalyst) per-market when an id is missing or malformed.
 import { priceYes } from '@/lib/lmsr'
 import { analyze, type AIAnalysis } from '@/lib/ai/fakeAnalyst'
-import type { DemoMarket } from '@/lib/demo/seed'
+import { SEED_MARKETS, type DemoMarket } from '@/lib/demo/seed'
 
 export const MAX_MARKETS = 20
 
@@ -101,6 +101,24 @@ export function buildUserContent(payloads: MarketPayload[]): string {
     volume: p.volume,
   }))
   return `다음 마켓들을 분석해서, 각 마켓 id에 대응하는 결과를 submit_analyses로 제출해줘.\n\n${JSON.stringify({ markets })}`
+}
+
+// CAN-001: server-owned id → canonical question. The route binds caller payloads to these
+// so caller-supplied free text can never reach the paid model prompt.
+const SEED_QUESTION = new Map(SEED_MARKETS.map(m => [m.id, m.question]))
+
+// Bind caller payloads to server-owned seed markets: DROP unknown ids and REPLACE the
+// caller's `question` with the canonical seed question. Numeric live fields
+// (price/recentPoints/volume) stay caller-supplied — the server keeps no copy of the
+// per-device live price/history, and numbers can't carry prompt-injection text.
+export function canonicalizeMarkets(payloads: MarketPayload[]): MarketPayload[] {
+  const out: MarketPayload[] = []
+  for (const p of payloads) {
+    const question = SEED_QUESTION.get(p.id)
+    if (question === undefined) continue // unknown id → drop
+    out.push({ id: p.id, question, price: p.price, recentPoints: p.recentPoints, volume: p.volume })
+  }
+  return out
 }
 
 function validResult(r: unknown): r is RawResult {
