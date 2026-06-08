@@ -21,12 +21,12 @@ export function Nav() {
           </span>
           <button
             type="button"
-            onClick={reset}
+            onClick={() => { if (confirm('정말 처음부터 다시 시작할까요? 잔액·포지션·거래내역이 초기화돼요.')) reset() }}
             title="처음부터 (흑역사 리셋)"
             aria-label="데모 리셋"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[15px] text-faint transition hover:bg-pearl hover:text-ink"
+            className="flex h-7 w-7 shrink-0 items-center justify-center gap-1 rounded-full text-[15px] text-faint transition hover:bg-pearl hover:text-ink sm:w-auto sm:px-2.5"
           >
-            ↺
+            ↺<span className="hidden ty-caption sm:inline">리셋</span>
           </button>
           <ThemeToggle />
         </nav>

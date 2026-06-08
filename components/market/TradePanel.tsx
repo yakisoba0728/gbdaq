@@ -50,7 +50,7 @@ export function TradePanel({ m }: { m: DemoMarket }) {
         <>
           <label htmlFor="trade-amount" className="ty-caption text-muted">금액 (상점)</label>
           <input id="trade-amount" type="number" min={1} step={1} value={amount} onChange={e => setAmount(Math.max(1, Math.floor(Number(e.target.value) || 1)))} className="mb-3 mt-1.5 w-full rounded-[11px] border border-hairline bg-pearl px-4 py-3 ty-display-md nums text-ink focus-visible:outline-2 focus-visible:outline-bluefocus" />
-          <div className="mb-4 flex gap-2">{[1, 5, 10].map(v => <button key={v} onClick={() => setAmount(a => a + v)} className="flex-1 rounded-full bg-pearl py-2 ty-caption nums text-muted transition active:scale-95">+{v}</button>)}</div>
+          <div className="mb-4 flex gap-2">{[1, 5, 10].map(v => <button key={v} onClick={() => setAmount(a => a + v)} className="flex-1 rounded-full bg-pearl py-2.5 ty-caption nums text-muted transition active:scale-95">+{v}</button>)}</div>
         </>
       ) : (
         <>
@@ -67,6 +67,7 @@ export function TradePanel({ m }: { m: DemoMarket }) {
             : <>예상 수령 <b className="ty-caption-strong nums text-ink">{fmtPoints(Math.max(0, -preview.cost))} 상점</b></>}
         </div>
       )}
+      <p className="mb-3 ty-fine text-faint">ℹ️ ‘한 주’는 정산 때 예측이 맞으면 1상점, 틀리면 0상점이 돼요.</p>
       <button onClick={submit} disabled={mode === 'sell' && held < 1} className="w-full rounded-full bg-blue py-[13px] ty-body text-white transition active:scale-95 disabled:opacity-50">
         거래
       </button>

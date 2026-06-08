@@ -26,11 +26,11 @@ export function MarketCard({ m }: { m: DemoMarket }) {
       </div>
       {/* 예/아니오 — 색 박스로 또렷하게 구분 */}
       <div className="mt-auto grid grid-cols-2 gap-2">
-        <div className="rounded-[10px] border border-up/20 bg-upbg px-2.5 py-1.5">
+        <div className="rounded-[12px] border border-up/20 bg-upbg px-2.5 py-1.5">
           <div className="ty-fine text-up">예</div>
           <AnimatedPercent value={p} className="ty-body-strong leading-none text-up" />
         </div>
-        <div className="rounded-[10px] border border-down/20 bg-downbg px-2.5 py-1.5">
+        <div className="rounded-[12px] border border-down/20 bg-downbg px-2.5 py-1.5">
           <div className="ty-fine text-down">아니오</div>
           <AnimatedPercent value={1 - p} className="ty-body-strong leading-none text-down" />
         </div>

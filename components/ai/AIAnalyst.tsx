@@ -151,16 +151,12 @@ export function AIAnalyst({ m }: { m: DemoMarket }) {
             </p>
 
             <div className="mt-4 rounded-[11px] border border-hairline bg-pearl px-3.5 py-2.5 ty-caption">
-              <span className="nums text-muted">시장가 {fmtPct(price)}</span>
-              <span className="mx-1.5 text-faint">·</span>
-              <span className="nums text-muted">AI {fmtPct(result.probYes)}</span>
-              <span className="mx-1.5 text-faint">→</span>
               {diffPct > 0 ? (
                 <span className={`ty-caption-strong ${vsCrowdColor}`}>
-                  AI는 &apos;{leanYes ? '예' : '아니오'}&apos;에 <span className="nums">{diffPct}%p</span> 더 베팅
+                  🎯 AI는 군중보다 &apos;{leanYes ? '예' : '아니오'}&apos;에 <span className="nums">{diffPct}%p</span> 더 기울었어요
                 </span>
               ) : (
-                <span className="ty-caption-strong text-muted">AI는 군중과 거의 같은 시각</span>
+                <span className="ty-caption-strong text-muted">🎯 AI는 군중과 거의 같은 시각이에요</span>
               )}
             </div>
 
