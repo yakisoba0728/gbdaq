@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mergeAnalyses, toPayload, validPayload, liveView, type RawResult } from '@/lib/ai/realAnalyst'
+import { mergeAnalyses, toPayload, validPayload, buildUserContent, liveView, type RawResult, type MarketPayload } from '@/lib/ai/realAnalyst'
 import type { DemoMarket } from '@/lib/demo/seed'
 import type { AIAnalysis } from '@/lib/ai/fakeAnalyst'
 
@@ -94,6 +94,36 @@ describe('realAnalyst payload helpers', () => {
     expect(validPayload({ id: 'a', question: 'q', price: 0.5, recentPoints: new Array(301).fill(0.5), volume: 1 })).toBe(false)
     // exactly at the caps is still accepted
     expect(validPayload({ id: 'a', question: 'x'.repeat(500), price: 0.5, recentPoints: new Array(300).fill(0.5), volume: 1 })).toBe(true)
+  })
+
+  it('validPayload caps id length at MAX_ID_LEN (64)', () => {
+    expect(validPayload({ id: 'a'.repeat(65), question: 'q', price: 0.5, recentPoints: [0.5], volume: 1 })).toBe(false)
+    // exactly 64 is still accepted
+    expect(validPayload({ id: 'a'.repeat(64), question: 'q', price: 0.5, recentPoints: [0.5], volume: 1 })).toBe(true)
+  })
+
+  it('validPayload rejects recentPoints with a non-finite element', () => {
+    expect(validPayload({ id: 'a', question: 'q', price: 0.5, recentPoints: [0.5, NaN], volume: 1 })).toBe(false)
+    expect(validPayload({ id: 'a', question: 'q', price: 0.5, recentPoints: [0.5, Infinity], volume: 1 })).toBe(false)
+    expect(validPayload({ id: 'a', question: 'q', price: 0.5, recentPoints: [0.5, 'x'], volume: 1 })).toBe(false)
+  })
+
+  it('validPayload rejects an object carrying an unknown key', () => {
+    expect(validPayload({ id: 'a', question: 'q', price: 0.5, recentPoints: [0.5], volume: 1, evil: 1 })).toBe(false)
+  })
+
+  it('buildUserContent strips unknown keys, emitting only the 5 normalized keys', () => {
+    const payload = { id: 'm1', question: 'q?', price: 0.42, recentPoints: [0.4, 0.42], volume: 7, evil: 1 } as unknown as MarketPayload
+    const out = buildUserContent([payload])
+    const parsed = JSON.parse(out.slice(out.indexOf('{')))
+    const market = parsed.markets[0]
+    expect(Object.keys(market).sort()).toEqual(['id', 'price', 'question', 'recentPoints', 'volume'])
+    expect('evil' in market).toBe(false)
+    expect(market.id).toBe('m1')
+    expect(market.question).toBe('q?')
+    expect(market.price).toBe(0.42)
+    expect(market.recentPoints).toEqual([0.4, 0.42])
+    expect(market.volume).toBe(7)
   })
 })
 

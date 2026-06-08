@@ -32,7 +32,7 @@ export function DemoGate({ children }: { children: React.ReactNode }) {
         cache: 'no-store',
       })
       if (res.ok) { setAuthed(true); return }
-      setError(res.status === 401 ? '비밀번호가 틀렸어요.' : '지금은 입장할 수 없어요. 잠시 후 다시 시도해 주세요.')
+      setError(res.status === 401 ? '비밀번호가 틀렸어요.' : res.status === 429 ? '너무 많이 시도했어요. 잠시 후 다시 시도해 주세요.' : '지금은 입장할 수 없어요. 잠시 후 다시 시도해 주세요.')
     } catch {
       setError('네트워크 오류예요. 다시 시도해 주세요.')
     } finally {

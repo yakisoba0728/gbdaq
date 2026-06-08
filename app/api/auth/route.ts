@@ -3,6 +3,7 @@
 // /api/analyze route — so an unauthenticated visitor can never trigger a model call.
 import { cookies } from 'next/headers'
 import { signSession, verifySession, passwordMatches, SESSION_COOKIE, SESSION_MAX_AGE_S } from '@/lib/auth/session'
+import { take, clientIp, authIpStore, AUTH_IP } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs' // node:crypto in the session lib needs the Node runtime
 
@@ -17,6 +18,10 @@ export async function GET() {
 
 // Login — correct password → set the signed session cookie.
 export async function POST(request: Request) {
+  // IP brute-force limit (S3) — before any password work.
+  const r = take(authIpStore, clientIp(request), AUTH_IP.limit, AUTH_IP.windowMs, Date.now())
+  if (!r.ok) return Response.json({ ok: false, error: 'rate' }, { status: 429, headers: { 'Retry-After': String(Math.ceil(r.retryAfterMs / 1000)) } })
+
   const secret = process.env.DEMO_PASSWORD
   if (!secret) return Response.json({ error: 'auth not configured' }, { status: 500 })
 

@@ -71,20 +71,35 @@ export function toPayload(m: DemoMarket): MarketPayload {
 // bill. Legit payloads are tiny (short question, ≤120-point history from the store).
 export const MAX_QUESTION_LEN = 500
 export const MAX_POINTS = 300
+export const MAX_ID_LEN = 64
+// Key whitelist: a payload may carry ONLY these keys. Any extra key (e.g. a crafted
+// `evil` field) makes the payload invalid, so unknown data can never reach the model.
+const ALLOWED = new Set(['id', 'question', 'price', 'recentPoints', 'volume'])
 export function validPayload(p: unknown): p is MarketPayload {
   if (!p || typeof p !== 'object') return false
   const o = p as Record<string, unknown>
-  return typeof o.id === 'string'
+  return Object.keys(o).every(k => ALLOWED.has(k))
+    && typeof o.id === 'string'
+    && o.id.length <= MAX_ID_LEN
     && typeof o.question === 'string'
     && o.question.length <= MAX_QUESTION_LEN
     && Number.isFinite(o.price)
     && Array.isArray(o.recentPoints)
     && o.recentPoints.length <= MAX_POINTS
+    && o.recentPoints.every(n => Number.isFinite(n))
     && Number.isFinite(o.volume)
 }
 
 export function buildUserContent(payloads: MarketPayload[]): string {
-  const markets = payloads.slice(0, MAX_MARKETS)
+  // Reconstruct each entry from ONLY the known keys so unknown fields can never be
+  // serialized into the model prompt (defense-in-depth alongside validPayload).
+  const markets = payloads.slice(0, MAX_MARKETS).map(p => ({
+    id: p.id,
+    question: p.question,
+    price: p.price,
+    recentPoints: p.recentPoints,
+    volume: p.volume,
+  }))
   return `다음 마켓들을 분석해서, 각 마켓 id에 대응하는 결과를 submit_analyses로 제출해줘.\n\n${JSON.stringify({ markets })}`
 }
 
