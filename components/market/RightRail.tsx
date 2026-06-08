@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { fmtPct, fmtPoints } from '@/lib/format'
+import { fmtPct } from '@/lib/format'
 import { useDemo } from '@/lib/demo/store'
 import { useAiAnalyses } from '@/lib/ai/useAiAnalyses'
 import type { AIAnalysis } from '@/lib/ai/fakeAnalyst'
@@ -9,7 +9,12 @@ import type { DemoMarket } from '@/lib/demo/seed'
 export function RightRail({ markets }: { markets: DemoMarket[] }) {
   const { priceOf } = useDemo()
   const breaking = [...markets].sort((a, b) => Math.abs(priceOf(b) - 0.5) - Math.abs(priceOf(a) - 0.5)).slice(0, 3)
-  const trending = [...markets].sort((a, b) => b.volume - a.volume).slice(0, 4)
+  // 📊 최근 급변동 — 최근 시세가 가장 크게 움직인 마켓(현재가 vs 약 6틱 전). volume·50:50근접·AI괴리
+  // 와 겹치지 않는 별개 컷. delta는 정렬·표시(▲/▼·%p) 양쪽에 쓰므로 map으로 한 번만 계산.
+  const movers = [...markets]
+    .map(m => ({ m, delta: priceOf(m) - (m.history.length > 6 ? m.history[m.history.length - 7] : m.history[0]) }))
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 4)
 
   // 🤖 AI 오늘의 픽 — 홈 진입(마운트) 시 화면의 마켓 전체를 한 번의 호출(/api/analyze)에
   // 묶어 실제 Claude로 분석한다. 탭 전환은 재호출하지 않고(useAiAnalyses가 마운트 스냅샷
@@ -34,10 +39,10 @@ export function RightRail({ markets }: { markets: DemoMarket[] }) {
       </section>
 
       <section className="rounded-[18px] border border-hairline bg-canvas p-6">
-        <h3 className="ty-body-strong mb-2 text-ink">인기 마켓 ›</h3>
-        {trending.map(m => (
+        <h3 className="ty-body-strong mb-2 text-ink">📊 최근 급변동</h3>
+        {movers.map(({ m, delta }) => (
           <Link key={m.id} href={`/market/${m.slug}`} className="ty-caption flex justify-between border-b border-divider py-2 last:border-0 last:pb-0">
-            <span className="text-ink">{m.icon} {m.question.slice(0, 14)}…</span><span className="text-faint nums">{fmtPoints(m.volume)} 🔥</span>
+            <span className="text-ink">{m.icon} {m.question.slice(0, 14)}…</span><span className={`ty-caption-strong nums ${delta >= 0 ? 'text-up' : 'text-down'}`}>{delta >= 0 ? '▲' : '▼'} {Math.round(Math.abs(delta) * 100)}%p</span>
           </Link>
         ))}
       </section>

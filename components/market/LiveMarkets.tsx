@@ -9,6 +9,12 @@ import { MarketCard } from './MarketCard'
 export function LiveMarkets({ markets, hero }: { markets: DemoMarket[]; hero?: DemoMarket }) {
   return (
     <>
+      {/* 첫 진입 안내 — 항상 정적으로 렌더(상태/ localStorage 의존 금지, 하이드레이션 안전).
+          bg-blue/5: parchment 히어로와 같은 색이 되지 않게 살짝 띄운 인포 배너(Nav 잔액칩과 동일 토큰). */}
+      <div className="border-b border-hairline bg-blue/5">
+        <p className="mx-auto max-w-[1120px] px-6 py-2 text-center ty-caption text-muted">💰 가입하면 30상점 지급 · 언제든 ↺ 버튼으로 처음부터 다시 시작</p>
+      </div>
+
       {/* HERO — featured market, generous air */}
       {hero && (
         <section className="bg-parchment">

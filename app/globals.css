@@ -19,6 +19,8 @@
   /* functional data colors (price up / down) */
   --up:#0a8f4f; --up-bg:rgba(10,143,79,.10);
   --down:#e0334b; --down-bg:rgba(224,51,75,.10);
+  /* chart line lift (filter value, not a color — kept out of @theme inline) */
+  --chart-line-shadow: drop-shadow(0 1px 1.5px rgba(0,0,0,.22));
 
   /* legacy aliases (existing components keep working, now Apple-valued) */
   --bg:var(--canvas); --panel:var(--canvas); --panel2:var(--parchment); --border:var(--hairline);
@@ -34,6 +36,8 @@
   --blue:#2997ff; --blue-focus:#2997ff; --blue-on-dark:#2997ff;
   --up:#30d158; --up-bg:rgba(48,209,88,.15);
   --down:#ff453a; --down-bg:rgba(255,69,58,.15);
+  /* deeper, softer lift so the line stays detached on the near-black canvas */
+  --chart-line-shadow: drop-shadow(0 1px 2px rgba(0,0,0,.55));
 
   --bg:var(--canvas); --panel:var(--parchment); --panel2:#2a2a2c; --border:var(--hairline);
   --text:var(--ink); --green:var(--up); --green-bg:var(--up-bg);

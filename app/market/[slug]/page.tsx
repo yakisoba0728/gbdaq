@@ -32,7 +32,10 @@ export default function MarketPage() {
           <span className="ty-caption text-muted">{m.category}</span>
         </div>
         <h1 className="ty-display text-ink">{m.question}</h1>
-        <div className="mt-3 ty-caption text-faint">💰 <span className="nums">{fmtPoints(m.volume)}</span> 상점 거래량</div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 ty-caption text-faint">
+          <span>💰 <span className="nums">{fmtPoints(m.volume)}</span> 상점 거래량</span>
+          <span className="rounded-full bg-pearl px-2.5 py-0.5">🔖 실제 결과 공지로 정산</span>
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">

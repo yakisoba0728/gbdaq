@@ -11,7 +11,7 @@ function Tab({ active, onClick, children }: { active: boolean; onClick: () => vo
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`ty-caption-strong shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 transition active:scale-95 ${
+      className={`ty-caption-strong shrink-0 whitespace-nowrap rounded-full px-3.5 py-2.5 transition active:scale-95 ${
         active ? 'bg-ink text-canvas' : 'bg-pearl text-muted hover:text-ink'
       }`}
     >

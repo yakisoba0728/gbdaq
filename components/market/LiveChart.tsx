@@ -33,7 +33,7 @@ export function LiveChart({ points, height = 240 }: { points: number[]; height?:
         <polygon fill={`url(#lc-${uid})`} points={`${line} ${W},${H} 0,${H}`} />
         <polyline fill="none" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"
           strokeLinecap="round" points={line} vectorEffect="non-scaling-stroke"
-          style={{ filter: 'drop-shadow(0 1px 1.5px rgba(0,0,0,.22))' }} />
+          style={{ filter: 'var(--chart-line-shadow)' }} />
       </svg>
       {/* 최신 시점 펄스 점 — viewBox가 non-uniform이라 % 좌표로 오버레이 */}
       <span className="pointer-events-none absolute"
