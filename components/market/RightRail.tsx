@@ -17,7 +17,7 @@ export function RightRail({ markets }: { markets: DemoMarket[] }) {
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
     .slice(0, 4)
 
-  // 🤖 AI 오늘의 픽 — 화면의 마켓 전체를 /api/analyze로 분석(useAiAnalyses가 90s마다 재읽기).
+  // 🤖 AI 오늘의 픽 — 화면의 마켓 전체를 /api/analyze로 휴리스틱 분석.
   // AI 관점을 현재가에 재앵커(liveView)해, 지금 차트 기준 AI가 군중과 가장 크게 갈리는 마켓을 고른다.
   const { byId, loading } = useAiAnalyses(markets)
   let pick: { m: DemoMarket; a: AIAnalysis; lv: ReturnType<typeof liveView> } | null = null

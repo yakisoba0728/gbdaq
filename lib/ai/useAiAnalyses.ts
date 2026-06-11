@@ -7,7 +7,7 @@ import { toPayload, mergeAnalyses, type RawResult } from '@/lib/ai/realAnalyst'
 export interface AiAnalysesState { byId: Record<string, AIAnalysis>; loading: boolean }
 
 // Fires ONE POST /api/analyze on mount, against the chart as it stands AT SITE-ACCESS TIME.
-// That snapshot (full history, oldest → newest) is what the model reads — its words describe
+// That snapshot (full history, oldest → newest) is what the heuristic reads — its words describe
 // "the chart when you opened the page". Between mounts the UI re-anchors the AI number to the
 // live price (see realAnalyst.liveView), so the displayed % keeps tracking the chart every tick
 // WITHOUT re-calling the API; only the rationale is frozen to the access-time view (by design).

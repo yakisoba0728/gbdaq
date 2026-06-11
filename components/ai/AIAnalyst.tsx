@@ -1,8 +1,7 @@
 'use client'
 // 지비닥 AI 애널리스트 — 디테일 페이지 패널.
-// 이제 실제 Claude(Haiku) 호출 결과를 보여준다. 페이지 진입(마운트) 시 /api/analyze를
-// 딱 1회 호출하고, "분석 중…" 셔머가 실제 네트워크 지연을 덮는다. 새로고침=재호출.
-// 실패하면 마켓별 휴리스틱(fakeAnalyst)으로 폴백한다(useAiAnalyses 내부).
+// 페이지 진입(마운트) 시 /api/analyze를 딱 1회 호출하고, 서버는 외부 모델 없이
+// 휴리스틱 결과를 반환한다. 네트워크 실패 시 클라이언트에서도 같은 휴리스틱으로 폴백한다.
 // 시세(군중 확률)는 DemoProvider가 4초마다 갱신된다. AI '관점'(edge=군중과의 괴리)을 잡아
 // 현재가에 다시 앵커(liveView)하므로 "AI 예측" 숫자는 매 틱 차트를 따라간다 → 시장가와
 // 절대 멀어져 보이지 않음. 진짜 재분석(rationale/edge 갱신)은 useAiAnalyses가 길게(90s) 한다.
@@ -75,7 +74,7 @@ export function AIAnalyst({ m }: { m: DemoMarket }) {
   const leanColor = leanYes ? 'text-up' : 'text-down'
   const vsCrowdColor = (lv?.vs ?? 0) > 0 ? 'text-up' : (lv?.vs ?? 0) < 0 ? 'text-down' : 'text-muted'
   const diffPct = lv?.diffPct ?? 0
-  const badge = result?.source === 'fallback' ? '오프라인 추정 모드' : 'Claude Haiku · 실시간 분석'
+  const badge = result?.source === 'fallback' ? '오프라인 추정 모드' : '휴리스틱 분석'
 
   return (
     <div className="rounded-[18px] border border-hairline bg-canvas p-6">
@@ -165,7 +164,7 @@ export function AIAnalyst({ m }: { m: DemoMarket }) {
             </div>
 
             <p className="mt-3 ty-fine text-faint">
-              ※ Claude Haiku 기반 자동 분석입니다. 투자(베팅) 판단의 참고용이며 결과를 보장하지 않습니다.
+              ※ 시세 기반 휴리스틱 자동 분석입니다. 투자(베팅) 판단의 참고용이며 결과를 보장하지 않습니다.
             </p>
           </motion.div>
         ) : null}

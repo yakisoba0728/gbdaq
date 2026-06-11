@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mergeAnalyses, toPayload, validPayload, buildUserContent, liveView, canonicalizeMarkets, type RawResult, type MarketPayload } from '@/lib/ai/realAnalyst'
+import { mergeAnalyses, toPayload, validPayload, liveView, canonicalizeMarkets, heuristicResults, type RawResult, type MarketPayload } from '@/lib/ai/realAnalyst'
 import { SEED_MARKETS, type DemoMarket } from '@/lib/demo/seed'
 import type { AIAnalysis } from '@/lib/ai/fakeAnalyst'
 
@@ -17,7 +17,7 @@ describe('realAnalyst.mergeAnalyses', () => {
       { id: 'm2', probYes: 0.3, confidence: 65, rationale: '내린다 저쩌고.' },
     ]
     const out = mergeAnalyses(markets, raw)
-    expect(out.m1.source).toBe('ai')
+    expect(out.m1.source).toBe('heuristic')
     expect(out.m1.probYes).toBeCloseTo(0.8, 4)
     expect(out.m1.lean).toBe('yes')
     expect(out.m1.vsCrowd).toBeCloseTo(0.3, 4) // 0.8 - 0.5
@@ -39,7 +39,7 @@ describe('realAnalyst.mergeAnalyses', () => {
     const out = mergeAnalyses([mk('m1'), mk('m2')], [
       { id: 'm1', probYes: 0.7, confidence: 70, rationale: 'ok.' },
     ])
-    expect(out.m1.source).toBe('ai')
+    expect(out.m1.source).toBe('heuristic')
     expect(out.m2.source).toBe('fallback')
     expect(out.m2.rationale.length).toBeGreaterThan(0) // heuristic produced something
   })
@@ -64,7 +64,7 @@ describe('realAnalyst.mergeAnalyses', () => {
       { id: 'zzz', probYes: 0.9, confidence: 80, rationale: 'noise.' },
       { id: 'm1', probYes: 0.6, confidence: 60, rationale: 'real.' },
     ])
-    expect(out.m1.source).toBe('ai')
+    expect(out.m1.source).toBe('heuristic')
     expect(out.m1.rationale).toBe('real.')
     expect(out.zzz).toBeUndefined()
   })
@@ -112,18 +112,27 @@ describe('realAnalyst payload helpers', () => {
     expect(validPayload({ id: 'a', question: 'q', price: 0.5, recentPoints: [0.5], volume: 1, evil: 1 })).toBe(false)
   })
 
-  it('buildUserContent strips unknown keys, emitting only the 5 normalized keys', () => {
-    const payload = { id: 'm1', question: 'q?', price: 0.42, recentPoints: [0.4, 0.42], volume: 7, evil: 1 } as unknown as MarketPayload
-    const out = buildUserContent([payload])
-    const parsed = JSON.parse(out.slice(out.indexOf('{')))
-    const market = parsed.markets[0]
-    expect(Object.keys(market).sort()).toEqual(['id', 'price', 'question', 'recentPoints', 'volume'])
-    expect('evil' in market).toBe(false)
-    expect(market.id).toBe('m1')
-    expect(market.question).toBe('q?')
-    expect(market.price).toBe(0.42)
-    expect(market.recentPoints).toEqual([0.4, 0.42])
-    expect(market.volume).toBe(7)
+})
+
+describe('realAnalyst.heuristicResults', () => {
+  it('returns deterministic raw API results without a model response', () => {
+    const payloads: MarketPayload[] = [
+      { id: 'm1', question: '오늘 급식에 탕수육이 나올까?', price: 0.72, recentPoints: [0.6, 0.68, 0.72], volume: 92 },
+      { id: 'm2', question: '정보 수행평가 만점자 5명 이상?', price: 0.41, recentPoints: [0.5, 0.45, 0.41], volume: 71 },
+    ]
+
+    const first = heuristicResults(payloads)
+    const second = heuristicResults(payloads)
+
+    expect(first).toEqual(second)
+    expect(first.map(r => r.id)).toEqual(['m1', 'm2'])
+    for (const result of first) {
+      expect(result.probYes).toBeGreaterThanOrEqual(0.05)
+      expect(result.probYes).toBeLessThanOrEqual(0.95)
+      expect(result.confidence).toBeGreaterThanOrEqual(56)
+      expect(result.confidence).toBeLessThanOrEqual(94)
+      expect(result.rationale.length).toBeGreaterThan(0)
+    }
   })
 })
 

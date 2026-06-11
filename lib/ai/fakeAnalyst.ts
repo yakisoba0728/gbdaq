@@ -17,7 +17,7 @@ export interface AIAnalysis {
   rationale: string      // 2-sentence Korean explanation
   dataCount: number      // stable-per-market "학습 데이터 N건" number
   vsCrowd: number        // probYes − price (how much the AI differs from the crowd)
-  source?: 'ai' | 'fallback' // set by the real-analyst layer; undefined from analyze() itself
+  source?: 'heuristic' | 'fallback' // set by the analysis layer; undefined from analyze() itself
 }
 
 // Tiny deterministic string hash (FNV-1a-ish). Stable across server/client.
